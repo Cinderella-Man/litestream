@@ -38,7 +38,8 @@ defmodule Litestream do
       access_key_id: Keyword.fetch!(opts, :access_key_id),
       secret_access_key: Keyword.fetch!(opts, :secret_access_key),
       bin_path: Keyword.get(opts, :bin_path, :download),
-      version: Keyword.get(opts, :version, Downloader.default_version())
+      version: Keyword.get(opts, :version, Downloader.default_version()),
+      override_architecture: Keyword.get(opts, :override_architecture, :x86_64)
     }
 
     GenServer.start_link(__MODULE__, state, name: Keyword.get(opts, :name, __MODULE__))
@@ -100,7 +101,7 @@ defmodule Litestream do
   end
 
   @impl true
-  def handle_continue(:download_litestream, %{otp_app: otp_app, version: version} = state) do
+  def handle_continue(:download_litestream, %{otp_app: otp_app, version: version, override_architecture: override_architecture} = state) do
     otp_app_priv_dir = :code.priv_dir(otp_app)
     download_dir = Path.join(otp_app_priv_dir, "/litestream/download")
     bin_dir = Path.join(otp_app_priv_dir, "/litestream/bin")
@@ -108,7 +109,7 @@ defmodule Litestream do
     File.mkdir_p!(download_dir)
     File.mkdir_p!(bin_dir)
 
-    {:ok, [bin_path], []} = Downloader.download(bin_dir, override_version: version)
+    {:ok, [bin_path], []} = Downloader.download(bin_dir, override_version: version, override_architecture: override_architecture)
 
     updated_state = Map.put(state, :bin_path, bin_path)
 

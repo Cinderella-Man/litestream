@@ -36,5 +36,6 @@ defmodule Litestream.Downloader do
   end
 
   @impl true
-  def download_name(version, os, arch), do: "litestream-v#{version}-#{os}-#{arch}.tar.gz"
+  def download_name(version, os, "amd64"), do: "litestream-#{version}-#{os}-x84_64.tar.gz"
+  def download_name(version, os, arch), do: "litestream-#{version}-#{os}-#{arch}.tar.gz"
 end
