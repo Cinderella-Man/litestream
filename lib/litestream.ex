@@ -109,7 +109,15 @@ defmodule Litestream do
     File.mkdir_p!(download_dir)
     File.mkdir_p!(bin_dir)
 
-    {:ok, [bin_path], []} = Downloader.download(bin_dir, override_version: version, override_architecture: override_architecture)
+    bin_path = Downloader.download(
+      bin_dir,
+      override_version: version,
+      override_architecture: override_architecture
+    )
+    |> case do
+      {:ok, [bin_path|_], []} -> bin_path
+      :skip -> Path.join(bin_dir, "litestream")
+    end
 
     updated_state = Map.put(state, :bin_path, bin_path)
 
