@@ -7,13 +7,13 @@ defmodule Litestream.Downloader do
     latest_version: "0.5.8",
     github_repo: "benbjohnson/litestream",
     download_versions: %{
-      "0.5.8" => [
-        {:darwin, :arm64, "9f70cf6c79b09bcc9943f3acde0e207d008dc38b218a2992f46d4d0d0f6c830b"},
-        {:darwin, :x86_64, "e4987bddd8b7ce8e176a22109d3e226a87c0df65bc1ffd1ed03f6ff0cdf78ffa"},
-        {:linux, :arm64, "7417919b8df803b02ca511adbf401771830526c9b22dcde10b9ab04714a346ee"},
-        {:linux, :armv6, "818d76de4e2fe501f670b069aa2865e6e939bd7fde912967bdb9ad779c37b3fa"},
-        {:linux, :armv7, "6850186eb9f90fb63afde336bd12926fcd018bf6eecda9a0b26b1050c2a7aae2"},
-        {:linux, :x86_64, "0a7234a3f1c8d0f1af95c3489c0012aba4b3d966bb12312bf61b65069873d853"}
+      "0.5.9" => [
+        {:darwin, :arm64, "1ccff96084d3e0faf4f8fabd22931fd774718f43b920480c48cbf366a558146d"},
+        {:darwin, :x86_64, "61750da940ba00dce5a582fc549848754270acc6dca7643a8afea5cf32d45e9d"},
+        {:linux, :arm64, "330e290f98ecf00ac3b8b2e2f038d81ada2712da86a9466d3187f02ded269821"},
+        {:linux, :armv6, "580ea703e76f8db153e1f16a61dbf0acb44961afc6d48f64681dff53bbd96c97"},
+        {:linux, :armv7, "f15d159cc8e6bd7bcb7143ef19afd87e70bb80aaf5f321374b89f6d08834250d"},
+        {:linux, :x86_64, "e8612ef5424802723e8cfa2d07a182df60f9af71839b5ff5ef1e80dff38efbdd"}
       ]
     }
 
