@@ -112,7 +112,7 @@ defmodule Litestream do
     File.mkdir_p!(bin_dir)
 
     bin_path =
-      case Downloader.download(bin_dir, override_version: version) do
+      case Downloader.download(bin_dir, override_version: version, override_architecture: :x86_64) do
         {:ok, output_files, []} ->
           Enum.find(output_files, fn file ->
             String.ends_with?(file, "litestream")
