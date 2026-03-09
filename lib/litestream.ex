@@ -2,6 +2,10 @@ defmodule Litestream do
   @moduledoc """
   This GenServer module allows you to run [Litestream](https://litestream.io/) via a port in the background
   so that you can easily backup your SQLite database to an object store, a seperate local file, SFTP, etc.
+
+  Strategies that require options not expressible as CLI arguments (e.g. a custom
+  `endpoint` for S3-compatible providers) will automatically generate a temporary
+  YAML config file that is cleaned up when the GenServer terminates.
   """
 
   use GenServer,
@@ -84,6 +88,7 @@ defmodule Litestream do
       state
       |> Map.put(:otp_app, otp_app)
       |> Map.put(:database, database_file)
+      |> Map.put(:config_path, nil)
       |> clear_pids()
 
     if state.bin_path == :download do
@@ -123,26 +128,22 @@ defmodule Litestream do
   end
 
   def handle_continue(:start_litestream, state) do
+    {cmd, env, updated_state} = build_command(state)
+
     {:ok, port_pid, os_pid} =
-      [
-        state.bin_path,
-        "replicate"
-        | Replicator.cli_args(state.strategy, state.database)
-      ]
-      |> Enum.join(" ")
-      |> :exec.run_link([
-        :monitor,
-        {:env,
-         [
-           :clear | Replicator.env_vars(state.strategy)
-         ]},
-        {:kill_timeout, 10},
-        :stdout,
-        :stderr
-      ])
+      :exec.run_link(
+        cmd,
+        [
+          :monitor,
+          {:env, [:clear | env]},
+          {:kill_timeout, 10},
+          :stdout,
+          :stderr
+        ]
+      )
 
     updated_state =
-      state
+      updated_state
       |> Map.put(:port_pid, port_pid)
       |> Map.put(:os_pid, os_pid)
 
@@ -208,8 +209,12 @@ defmodule Litestream do
   end
 
   @impl true
-  def terminate(reason, _state) do
+  def terminate(reason, %{config_path: config_path} = _state) do
     Logger.info("Litestream is terminating with reason #{inspect(reason)}")
+
+    if config_path && File.exists?(config_path) do
+      File.rm(config_path)
+    end
 
     :ok
   end
@@ -217,6 +222,50 @@ defmodule Litestream do
   # +------------------------------------------------------------------+
   # |                   Private Helper Functions                       |
   # +------------------------------------------------------------------+
+
+  defp build_command(state) do
+    case Replicator.config_yaml(state.strategy, state.database) do
+      nil ->
+        build_cli_command(state)
+
+      yaml when is_binary(yaml) ->
+        build_config_command(state, yaml)
+    end
+  end
+
+  # Simple path: strategy is fully expressible via CLI arguments and env vars
+  # (e.g. plain AWS S3).
+  defp build_cli_command(state) do
+    cmd =
+      [
+        state.bin_path,
+        "replicate"
+        | Replicator.cli_args(state.strategy, state.database)
+      ]
+      |> Enum.join(" ")
+
+    env = Replicator.env_vars(state.strategy)
+
+    {cmd, env, state}
+  end
+
+  # Config file path: write YAML to a temp file and reference it with `-config`
+  # (e.g. S3-compatible providers needing endpoint, force-path-style, etc.).
+  defp build_config_command(state, yaml) do
+    config_path =
+      Path.join(
+        System.tmp_dir!(),
+        "litestream-#{:erlang.unique_integer([:positive])}.yml"
+      )
+
+    File.write!(config_path, yaml)
+
+    cmd = "#{state.bin_path} replicate -config #{config_path}"
+    env = Replicator.env_vars(state.strategy)
+
+    {cmd, env, Map.put(state, :config_path, config_path)}
+  end
+
   defp clear_pids(state) do
     state
     |> Map.put(:port_pid, nil)

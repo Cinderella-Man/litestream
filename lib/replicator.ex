@@ -14,8 +14,16 @@ defprotocol Litestream.Replicator do
 
   @doc """
   This function should create a list of CLI arguments that are passed to the
-  Litestream binary.
+  Litestream binary. Only used when `config_yaml/2` returns `nil`.
   """
   @spec cli_args(struct :: t(), database :: String.t()) :: list(args :: String.t())
   def cli_args(struct, database)
+
+  @doc """
+  This function should return a YAML config string for strategies that require
+  a config file (e.g. S3-compatible endpoints with options not available on the
+  CLI), or `nil` if the strategy can be fully expressed via CLI arguments.
+  """
+  @spec config_yaml(struct :: t(), database :: String.t()) :: String.t() | nil
+  def config_yaml(struct, database)
 end
