@@ -4,7 +4,7 @@ defmodule Litestream.Downloader do
   """
 
   use OctoFetch,
-    latest_version: "0.5.8",
+    latest_version: "0.5.9",
     github_repo: "benbjohnson/litestream",
     download_versions: %{
       "0.5.9" => [
